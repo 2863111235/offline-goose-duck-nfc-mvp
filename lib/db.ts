@@ -1,22 +1,42 @@
-import Database from "better-sqlite3";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
+
+export class AppDatabase extends DatabaseSync {
+  transaction<T>(operation: () => T): () => T {
+    return () => {
+      this.exec("BEGIN IMMEDIATE");
+      try {
+        const value = operation();
+        this.exec("COMMIT");
+        return value;
+      } catch (error) {
+        try {
+          this.exec("ROLLBACK");
+        } catch {
+          // Preserve the original transaction error if rollback is unnecessary or fails.
+        }
+        throw error;
+      }
+    };
+  }
+}
 
 declare global {
   // eslint-disable-next-line no-var
-  var __gooseDuckDb: Database.Database | undefined;
+  var __gooseDuckDb: AppDatabase | undefined;
 }
 
 function token(): string {
   return randomBytes(16).toString("hex");
 }
 
-export function initializeDatabase(db: Database.Database): Database.Database {
-  db.pragma("foreign_keys = ON");
-  db.pragma("busy_timeout = 5000");
-  if (db.name !== ":memory:") {
-    db.pragma("journal_mode = WAL");
+export function initializeDatabase(db: AppDatabase, filename = ":memory:"): AppDatabase {
+  db.exec("PRAGMA foreign_keys = ON");
+  db.exec("PRAGMA busy_timeout = 5000");
+  if (filename !== ":memory:") {
+    db.exec("PRAGMA journal_mode = WAL");
   }
 
   db.exec(`
@@ -120,14 +140,14 @@ export function initializeDatabase(db: Database.Database): Database.Database {
   return db;
 }
 
-export function createDatabase(filename: string): Database.Database {
+export function createDatabase(filename: string): AppDatabase {
   if (filename !== ":memory:") {
     fs.mkdirSync(path.dirname(path.resolve(filename)), { recursive: true });
   }
-  return initializeDatabase(new Database(filename));
+  return initializeDatabase(new AppDatabase(filename), filename);
 }
 
-export function getDatabase(): Database.Database {
+export function getDatabase(): AppDatabase {
   if (!globalThis.__gooseDuckDb) {
     const filename = process.env.DATABASE_PATH || "./data/goose-duck.sqlite";
     globalThis.__gooseDuckDb = createDatabase(filename);

@@ -16,7 +16,7 @@
 
 ## 本地运行
 
-要求 Node.js 24 或更高版本。
+要求 Node.js 24 或更高版本。数据库使用 Node 自带的 SQLite，不需要安装 Visual Studio、Python 或额外数据库服务；启动时出现 `ExperimentalWarning: SQLite` 属于当前 Node 24 的已知提示。
 
 ```powershell
 Copy-Item .env.example .env.local

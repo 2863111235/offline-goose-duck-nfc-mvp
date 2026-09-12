@@ -12,7 +12,7 @@
 | pnpm | `11.3.0`，已安装但 MVP 暂不要求使用 |
 | Git | `2.53.0.windows.2` |
 | `node:sqlite` | 可以加载，但运行时显示 ExperimentalWarning |
-| 当前仓库 | 尚未初始化 Git，也没有应用依赖 |
+| 当前仓库 | 已初始化 Git，应用依赖由 npm 管理 |
 
 本机已经满足搭建 Node 网页原型的基础条件。当前无需安装数据库服务、Docker、Java、Android Studio 或 Xcode。
 
@@ -40,17 +40,14 @@ Next.js 网页与接口（同源、同端口）
 
 ### SQLite 驱动：已选择
 
-可选项 A：`better-sqlite3`。
+第一版使用 Node.js 24 自带的 `node:sqlite`：
 
-- 优点：事务模型直接，适合单机、小并发、强一致的现场裁判系统；
-- 注意：包含原生模块，安装时需要确认当前 Node 24 是否有可用预编译包。
+- 不需要单独安装数据库服务或原生数据库依赖；
+- 避免 Windows 安装 `better-sqlite3` 时因缺少预编译包而要求 Visual Studio C++ 工具链；
+- 事务由项目内的最小封装统一执行，关键写操作仍使用 `BEGIN IMMEDIATE`、提交和异常回滚；
+- 本机 Node 24.14.1 会输出 ExperimentalWarning，这是 MVP 当前已知并接受的提示，不影响安装与现场测试。
 
-可选项 B：Node 自带 `node:sqlite`。
-
-- 优点：零额外数据库驱动依赖；
-- 注意：本机 Node 24.14.1 实测仍给出实验性警告，不建议在没有明确接受该风险时作为默认方案。
-
-2026-09-12 已选择 A：`better-sqlite3`。当前 `13.0.3` 声明要求 Node 22 以上，符合本机 Node 24.14.1。若实际安装或未来升级不兼容，应先讨论是调整 Node LTS 版本还是更换驱动，不能暗中切换。
+最初选择的 `better-sqlite3` 13.0.3 在本机实际安装时进入 `node-gyp rebuild`，并因未安装 Visual Studio C++ 工作负载失败。2026-09-12 据此改用 `node:sqlite`，避免为了本地原型额外安装大型编译环境。未来升级 Node 或更换驱动仍需先讨论，不能暗中切换。
 
 ## 3. 局域网运行约定
 

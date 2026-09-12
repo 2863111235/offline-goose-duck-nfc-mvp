@@ -1,5 +1,4 @@
-import type Database from "better-sqlite3";
-import { getDatabase } from "@/lib/db";
+import { getDatabase, type AppDatabase } from "@/lib/db";
 import {
   phases,
   type ActionResult,
@@ -9,7 +8,7 @@ import {
   type TaskRow,
 } from "@/lib/types";
 
-type Db = Database.Database;
+type Db = AppDatabase;
 
 function positiveInt(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
@@ -50,11 +49,11 @@ function priorRequest(db: Db, requestKey: string): ActionResult | null {
 }
 
 export function getGame(db: Db = getDatabase()): GameRow {
-  return db.prepare("SELECT * FROM games WHERE id = 1").get() as GameRow;
+  return db.prepare("SELECT * FROM games WHERE id = 1").get() as unknown as GameRow;
 }
 
 export function getPlayers(db: Db = getDatabase()): PlayerRow[] {
-  return db.prepare("SELECT * FROM players WHERE game_id = 1 ORDER BY id").all() as PlayerRow[];
+  return db.prepare("SELECT * FROM players WHERE game_id = 1 ORDER BY id").all() as unknown as PlayerRow[];
 }
 
 export function getPlayer(id: number, db: Db = getDatabase()): PlayerRow | undefined {
@@ -70,7 +69,7 @@ export function getPlayerByToken(token: string, db: Db = getDatabase()): PlayerR
 }
 
 export function getTasks(db: Db = getDatabase()): TaskRow[] {
-  return db.prepare("SELECT * FROM tasks WHERE game_id = 1 ORDER BY id").all() as TaskRow[];
+  return db.prepare("SELECT * FROM tasks WHERE game_id = 1 ORDER BY id").all() as unknown as TaskRow[];
 }
 
 export function getTaskByToken(token: string, db: Db = getDatabase()): TaskRow | undefined {

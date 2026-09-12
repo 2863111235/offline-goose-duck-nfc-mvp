@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
-import type Database from "better-sqlite3";
-import { createDatabase } from "../lib/db";
+import { createDatabase, type AppDatabase } from "../lib/db";
 import {
   getPlayer,
   getPlayers,
@@ -14,7 +13,7 @@ import {
   startTask,
 } from "../lib/game-service";
 
-let db: Database.Database;
+let db: AppDatabase;
 const now = 1_800_000_000_000;
 
 beforeEach(() => {
@@ -89,4 +88,17 @@ test("任务需要裁判确认，确认后只冷却该玩家的该任务", () =>
   assert.equal(completed.ok, true);
   assert.equal(getTaskCooldown(player.id, task.id, db), now + 181_000);
   assert.equal(getTaskCooldown(other.id, task.id, db), 0);
+});
+
+test("事务报错时会回滚已经写入的状态", () => {
+  const [, , good] = getPlayers(db);
+
+  assert.throws(() =>
+    db.transaction(() => {
+      db.prepare("UPDATE players SET alive = 0 WHERE id = ?").run(good.id);
+      throw new Error("rollback test");
+    })(),
+  );
+
+  assert.equal(getPlayer(good.id, db)?.alive, 1);
 });
