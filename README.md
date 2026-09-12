@@ -47,6 +47,8 @@ npm run build
 
 功能边界见 [MVP 范围](docs/MVP_SCOPE.md)，环境说明见 [环境配置](docs/ENVIRONMENT.md)。完整 NFC 原理文档保留在本地上级工作区；仓库内文档已记录本 MVP 所需约束。
 
+写入标签和逐项现场验证请直接查看 [NFC 标签录入与现场测试说明书](docs/NFC标签录入与现场测试说明书.md)。
+
 ## 当前测试数据
 
 - 房间码：`TEST01`
